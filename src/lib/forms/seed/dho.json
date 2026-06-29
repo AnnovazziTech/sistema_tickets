@@ -1,0 +1,180 @@
+{
+  "setor": { "slug": "dho", "nome": "DHO", "icone": "Users", "cor": "#162763" },
+  "formulario": {
+    "slug": "movimentacao",
+    "nome": "Movimentação de Funcionários",
+    "descricao": "Alteração de cargo, alteração salarial ou transferência de unidade, departamento ou setor.",
+    "icone": "ArrowLeftRight",
+    "prefixo": "MOV"
+  },
+  "sla": { "tempo_primeira_resposta_min": 2880, "tempo_resolucao_min": 20160, "prioridade": 0 },
+  "definicao": {
+    "versaoSchema": 1,
+    "titulo": "Movimentação de Funcionários",
+    "descricao": "Solicite alteração de cargo, alteração salarial ou transferência de unidade, departamento ou setor.",
+    "campoTitulo": "nomeFuncionario",
+    "avisos": [
+      {
+        "tipo": "alerta",
+        "texto": "As solicitações de movimentação devem ser registradas até o dia 25 de cada mês para que tenham vigência a partir do dia 1º do mês seguinte."
+      }
+    ],
+    "notificacoes": {
+      "emails": ["dp@grupofaj.com.br", "rh@grupofaj.com.br"],
+      "assuntoTemplate": "Movimentação {{protocolo}} — {{nomeFuncionario}}"
+    },
+    "secoes": [
+      {
+        "id": "funcionario",
+        "titulo": "Dados do funcionário",
+        "colunas": 2,
+        "campos": [
+          {
+            "id": "nomeFuncionario",
+            "tipo": "lookup",
+            "label": "Nome completo do funcionário",
+            "obrigatorio": true,
+            "largura": "half",
+            "catalogo": "funcionarios",
+            "placeholder": "Ex.: Maria Aparecida de Souza"
+          },
+          {
+            "id": "novoCargo",
+            "tipo": "lookup",
+            "label": "Novo cargo",
+            "obrigatorio": true,
+            "largura": "half",
+            "catalogo": "cargos",
+            "placeholder": "Ex.: Analista Administrativo Pleno"
+          }
+        ]
+      },
+      {
+        "id": "remuneracao",
+        "titulo": "Remuneração",
+        "colunas": 2,
+        "campos": [
+          {
+            "id": "alteracaoSalarial",
+            "tipo": "simNao",
+            "label": "Haverá alteração salarial?",
+            "obrigatorio": true,
+            "largura": "half"
+          },
+          {
+            "id": "novoSalario",
+            "tipo": "moeda",
+            "label": "Novo salário",
+            "largura": "half",
+            "visivelQuando": { "campo": "alteracaoSalarial", "operador": "igual", "valor": true },
+            "obrigatorioQuando": { "campo": "alteracaoSalarial", "operador": "igual", "valor": true }
+          },
+          {
+            "id": "ajudaCusto",
+            "tipo": "simNao",
+            "label": "Ajuda de custo?",
+            "obrigatorio": true,
+            "largura": "half"
+          },
+          {
+            "id": "valorAjudaCusto",
+            "tipo": "moeda",
+            "label": "Valor da ajuda de custo",
+            "largura": "half",
+            "visivelQuando": { "campo": "ajudaCusto", "operador": "igual", "valor": true },
+            "obrigatorioQuando": { "campo": "ajudaCusto", "operador": "igual", "valor": true }
+          },
+          {
+            "id": "cargoConfianca",
+            "tipo": "simNao",
+            "label": "Cargo de confiança?",
+            "obrigatorio": true
+          },
+          {
+            "id": "notaConfianca",
+            "tipo": "banner",
+            "label": "Observação",
+            "tomBanner": "info",
+            "conteudo": "Cargo de confiança tem percentual fixo — por isso não há campo de valor."
+          }
+        ]
+      },
+      {
+        "id": "transferencia",
+        "titulo": "Transferência",
+        "descricao": "Preencha apenas se a movimentação envolver mudança de unidade, departamento ou setor.",
+        "colunas": 3,
+        "campos": [
+          {
+            "id": "transferencia",
+            "tipo": "simNao",
+            "label": "Haverá transferência de unidade, departamento ou setor?"
+          },
+          {
+            "id": "novaUnidade",
+            "tipo": "lookup",
+            "label": "Nova unidade",
+            "largura": "third",
+            "catalogo": "unidades",
+            "placeholder": "Unidade / obra",
+            "visivelQuando": { "campo": "transferencia", "operador": "igual", "valor": true },
+            "obrigatorioQuando": { "campo": "transferencia", "operador": "igual", "valor": true }
+          },
+          {
+            "id": "novoDepartamento",
+            "tipo": "texto",
+            "label": "Novo departamento",
+            "largura": "third",
+            "placeholder": "Departamento",
+            "visivelQuando": { "campo": "transferencia", "operador": "igual", "valor": true }
+          },
+          {
+            "id": "novoSetor",
+            "tipo": "texto",
+            "label": "Novo setor",
+            "largura": "third",
+            "placeholder": "Setor",
+            "visivelQuando": { "campo": "transferencia", "operador": "igual", "valor": true }
+          }
+        ]
+      },
+      {
+        "id": "vigencia",
+        "titulo": "Vigência",
+        "colunas": 1,
+        "campos": [
+          {
+            "id": "competencia",
+            "tipo": "mes",
+            "label": "Competência de vigência",
+            "obrigatorio": true,
+            "dica": "Na competência informada, o funcionário receberá os valores atualizados a partir do 5º dia útil do mês subsequente."
+          }
+        ]
+      },
+      {
+        "id": "solicitante",
+        "titulo": "Solicitante",
+        "descricao": "Identificação do gestor responsável (opcional).",
+        "colunas": 2,
+        "campos": [
+          { "id": "solicitanteNome", "tipo": "texto", "label": "Seu nome", "largura": "half" },
+          {
+            "id": "solicitanteEmail",
+            "tipo": "email",
+            "label": "Seu e-mail",
+            "largura": "half",
+            "placeholder": "nome@grupofaj.com.br"
+          },
+          {
+            "id": "observacoes",
+            "tipo": "textarea",
+            "label": "Observações",
+            "linhas": 3,
+            "placeholder": "Informações complementares sobre a movimentação (opcional)."
+          }
+        ]
+      }
+    ]
+  }
+}

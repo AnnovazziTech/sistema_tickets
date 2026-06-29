@@ -1,0 +1,46 @@
+@import "tailwindcss";
+
+@theme {
+  --color-faj-azul: #162763;
+  --color-faj-azul-medio: #06439c;
+  --color-faj-azul-claro: #b2c0ff;
+  --color-faj-laranja: #ed7219;
+  --color-faj-dourado: #dc9a0e;
+  --color-faj-bg: #ffffff;
+  --color-faj-bg-suave: #f3f4f7;
+  --color-faj-texto: #1f2430;
+  --color-faj-texto-dim: #5b6472;
+  --color-faj-texto-muted: #9aa1ad;
+  --color-faj-border: #e4e7ee;
+  --color-faj-sucesso: #16a34a;
+  --color-faj-aviso: #d97706;
+  --color-faj-erro: #dc2626;
+  --radius-faj: 5px;
+}
+
+html,
+body {
+  background-color: var(--color-faj-bg-suave);
+  color: var(--color-faj-texto);
+  font-family:
+    var(--font-geist-sans), system-ui, -apple-system, Segoe UI, sans-serif;
+}
+
+::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+::-webkit-scrollbar-thumb {
+  background: #c7ccd6;
+  border-radius: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.card-faj {
+  background: var(--color-faj-bg);
+  border: 1px solid var(--color-faj-border);
+  border-radius: var(--radius-faj);
+  box-shadow: 0 1px 2px rgba(22, 39, 99, 0.04);
+}
