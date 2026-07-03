@@ -107,10 +107,10 @@ export async function mudarStatus(
   const fechado = FECHADOS.includes(novo);
   await query(
     `UPDATE tickets.tickets SET
-        status = $2,
-        data_primeira_resposta = CASE WHEN data_primeira_resposta IS NULL AND $2 <> 'aberto'
+        status = $2::tickets.ticket_status,
+        data_primeira_resposta = CASE WHEN data_primeira_resposta IS NULL AND $2::tickets.ticket_status <> 'aberto'
              THEN now() ELSE data_primeira_resposta END,
-        sla_resposta_estourado = CASE WHEN data_primeira_resposta IS NULL AND $2 <> 'aberto' AND sla_resposta_meta_min IS NOT NULL
+        sla_resposta_estourado = CASE WHEN data_primeira_resposta IS NULL AND $2::tickets.ticket_status <> 'aberto' AND sla_resposta_meta_min IS NOT NULL
              THEN EXTRACT(EPOCH FROM (now() - data_abertura)) / 60 > sla_resposta_meta_min
              ELSE sla_resposta_estourado END,
         data_fechamento = CASE WHEN $3 THEN now() ELSE data_fechamento END,
