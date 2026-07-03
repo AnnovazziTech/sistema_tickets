@@ -10,6 +10,7 @@ declare module "next-auth" {
       papel: Papel;
       setorId?: string | null;
       setorNome?: string | null;
+      setorSlug?: string | null;
     } & DefaultSession["user"];
   }
 }
@@ -24,6 +25,7 @@ if (process.env.AUTH_DEV_LOGIN === "true") {
       credentials: {
         email: { label: "E-mail", type: "email" },
         papel: { label: "Papel", type: "text" },
+        setor: { label: "Setor (slug)", type: "text" },
         senha: { label: "Senha", type: "password" },
       },
       authorize: (cred) => {
@@ -33,7 +35,8 @@ if (process.env.AUTH_DEV_LOGIN === "true") {
         if (!email) return null;
         const p = String(cred?.papel ?? "MEMBRO").toUpperCase();
         const papel: Papel = p === "ADMIN" || p === "GESTOR" ? (p as Papel) : "MEMBRO";
-        return { id: email, email, name: email.split("@")[0], papel };
+        const setorSlug = String(cred?.setor ?? "").trim().toLowerCase() || null;
+        return { id: email, email, name: email.split("@")[0], papel, setorSlug };
       },
     }),
   );
@@ -57,9 +60,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   pages: { signIn: "/login" },
   callbacks: {
     async jwt({ token, user, account }) {
-      // Provider dev já entrega o papel no `user`.
+      // Provider dev já entrega o papel/setor no `user`.
       if (user && (user as { papel?: Papel }).papel) {
         token.papel = (user as { papel?: Papel }).papel;
+        token.setorSlug = (user as { setorSlug?: string | null }).setorSlug ?? null;
       }
       // SSO corporativo: resolve papel/setor a partir do diretório.
       if (account?.provider === "microsoft-entra-id" && token.email) {
@@ -67,6 +71,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.papel = r.papel;
         token.setorId = r.setorId;
         token.setorNome = r.setorNome;
+        token.setorSlug = r.setorSlug;
       }
       if (!token.papel) token.papel = "MEMBRO";
       return token;
@@ -75,6 +80,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       session.user.papel = (token.papel as Papel) ?? "MEMBRO";
       session.user.setorId = (token.setorId as string | null) ?? null;
       session.user.setorNome = (token.setorNome as string | null) ?? null;
+      session.user.setorSlug = (token.setorSlug as string | null) ?? null;
       return session;
     },
   },

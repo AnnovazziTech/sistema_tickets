@@ -3,6 +3,7 @@ import { Ticket } from "lucide-react";
 import { Card, PageHeader } from "@/components/ui";
 import { Campo } from "@/components/form-fields";
 import { StatusChanger } from "@/components/tickets/StatusChanger";
+import { AssumirBtn, Comentarios } from "@/components/tickets/Comentarios";
 import { getTicket } from "@/lib/tickets/ticketRepo";
 import { rotuloStatus, tomStatus } from "@/lib/tickets/status";
 import { camposDeDados } from "@/lib/forms/tipos";
@@ -36,6 +37,10 @@ export default async function TicketDetalhe({ params }: { params: Promise<{ id: 
                 </div>
               ))}
             </div>
+          </Card>
+
+          <Card titulo="Comentários">
+            <Comentarios ticketId={t.id} comentarios={t.comentarios} />
           </Card>
 
           <Card titulo="Histórico">
@@ -77,6 +82,17 @@ export default async function TicketDetalhe({ params }: { params: Promise<{ id: 
               )}
             </div>
             <StatusChanger ticketId={t.id} statusAtual={t.status} />
+            <div className="mt-3 border-t border-faj-border pt-3">
+              <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-faj-texto-muted">
+                Responsável
+              </p>
+              {t.responsavelNome ? (
+                <p className="mb-2 text-sm text-faj-texto">{t.responsavelNome}</p>
+              ) : (
+                <p className="mb-2 text-sm text-faj-texto-muted">Sem responsável</p>
+              )}
+              <AssumirBtn ticketId={t.id} />
+            </div>
           </Card>
 
           {(t.solicitanteNome || t.solicitanteEmail) && (

@@ -5,9 +5,19 @@ export type PapelResolvido = {
   papel: Papel;
   setorId: string | null;
   setorNome: string | null;
+  setorSlug: string | null;
   nome: string | null;
   usuarioId: string | null;
 };
+
+function slugify(s: string): string {
+  return s
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+}
 
 // Setores cujos membros são administradores da plataforma (Controladoria e P&D).
 const ADMIN_SETORES = ["controladoria", "p&d", "ped", "p&d / produtividade", "produtividade"];
@@ -16,6 +26,7 @@ const MEMBRO: PapelResolvido = {
   papel: "MEMBRO",
   setorId: null,
   setorNome: null,
+  setorSlug: null,
   nome: null,
   usuarioId: null,
 };
@@ -59,6 +70,17 @@ export async function resolverPapel(email: string): Promise<PapelResolvido> {
       if (u.nivel_acesso === "gestor" || gestor.length > 0) papel = "GESTOR";
     }
 
+    // Deriva o slug do setor na plataforma (tickets.setores) a partir do nome do diretório.
+    let setorSlug: string | null = null;
+    if (u.setor_nome) {
+      const cand = slugify(u.setor_nome);
+      const m = await query<{ slug: string }>(
+        `SELECT slug FROM tickets.setores WHERE slug = $1 AND ativo LIMIT 1`,
+        [cand],
+      );
+      setorSlug = m[0]?.slug ?? null;
+    }
+
     await query(
       `INSERT INTO tickets.usuarios (id, email, nome, setor_id, setor_nome, papel, nivel_acesso, sincronizado_em)
        VALUES ($1, $2, $3, $4, $5, $6, $7, now())
@@ -69,7 +91,7 @@ export async function resolverPapel(email: string): Promise<PapelResolvido> {
       [u.id, email.toLowerCase(), u.nome, u.setor_id, u.setor_nome, papel, u.nivel_acesso],
     );
 
-    return { papel, setorId: u.setor_id, setorNome: u.setor_nome, nome: u.nome, usuarioId: u.id };
+    return { papel, setorId: u.setor_id, setorNome: u.setor_nome, setorSlug, nome: u.nome, usuarioId: u.id };
   } catch (err) {
     console.error("[resolverPapel]", err);
     return MEMBRO;

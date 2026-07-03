@@ -16,6 +16,7 @@ export function LoginForm({
 }) {
   const [email, setEmail] = useState("");
   const [papel, setPapel] = useState("ADMIN");
+  const [setor, setSetor] = useState("");
   const [senha, setSenha] = useState("");
   const [erro, setErro] = useState<string | null>(null);
   const [carregando, setCarregando] = useState(false);
@@ -24,7 +25,7 @@ export function LoginForm({
     e.preventDefault();
     setErro(null);
     setCarregando(true);
-    const r = await signIn("dev", { email, papel, senha, redirect: false });
+    const r = await signIn("dev", { email, papel, setor, senha, redirect: false });
     setCarregando(false);
     if (r?.error) setErro("Credenciais inválidas.");
     else window.location.href = callbackUrl;
@@ -68,6 +69,17 @@ export function LoginForm({
               <option value="MEMBRO">MEMBRO</option>
             </select>
           </Campo>
+          {papel !== "ADMIN" && (
+            <Campo label="Setor (slug, opcional — ex.: dho, comercial)">
+              <input
+                type="text"
+                value={setor}
+                onChange={(e) => setSetor(e.target.value)}
+                placeholder="dho"
+                className={inputCls}
+              />
+            </Campo>
+          )}
           <Campo label="Senha">
             <input
               type="password"

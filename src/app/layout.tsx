@@ -33,6 +33,11 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
                 </div>
               </Link>
 
+              <nav className="ml-6 flex items-center gap-3 text-[12px] font-medium text-faj-azul-claro">
+                <Link href="/" className="hover:text-white">Início</Link>
+                <Link href="/tickets" className="hover:text-white">Tickets</Link>
+              </nav>
+
               <div className="ml-auto flex items-center gap-3 text-[12px]">
                 {session?.user ? (
                   <>

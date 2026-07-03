@@ -335,6 +335,8 @@ SMTP não estiver configurado ou falhar, o ticket é gravado mesmo assim (`email
 | `PUT` | `/api/formularios/[id]` | ADMIN | Salva rascunho da definição. |
 | `POST` | `/api/formularios/[id]/publicar` | ADMIN | Publica nova versão. |
 | `PATCH` | `/api/tickets/[id]/status` | ADMIN/GESTOR | Troca status (recalcula SLA + histórico). |
+| `POST` | `/api/tickets/[id]/comentarios` | ADMIN/GESTOR | Adiciona comentário à timeline. |
+| `POST` | `/api/tickets/[id]/assumir` | ADMIN/GESTOR | Define o usuário atual como responsável. |
 | `GET/POST` | `/api/auth/[...nextauth]` | — | Handlers do NextAuth. |
 
 \* "público" = sem login quando a auth está desativada; com auth ativa, a abertura fica sob a área
@@ -349,13 +351,18 @@ Respostas de erro padronizadas: `400` (corpo inválido), `403` (acesso restrito)
 
 | Rota | Quem | O quê |
 |---|---|---|
-| `/` | todos | redireciona para `/dho/movimentacao` |
-| `/[setor]/[formulario]` | gestor | abre o formulário publicado |
-| `/tickets/[id]` | gestor/admin | detalhe + timeline + troca de status |
+| `/` | logado | home: setores e formulários que o usuário pode abrir |
+| `/[setor]` | gestor (seu setor) | lista os formulários publicados do setor |
+| `/[setor]/[formulario]` | gestor (seu setor) | abre o formulário publicado |
+| `/tickets` | gestor/admin | **fila de tickets** com filtro por status (gestor vê só o seu setor) |
+| `/tickets/[id]` | gestor/admin | detalhe + respostas + comentários + timeline + troca de status + assumir |
 | `/login` · `/sem-acesso` | todos | login / 403 |
 | `/admin/dashboard` | ADMIN | KPIs e SLA |
 | `/admin/setores` | ADMIN | cadastrar setores |
 | `/admin/builder` · `/admin/builder/[id]` | ADMIN | listar/criar e montar formulários |
+
+**Escopo por papel:** ADMIN vê tudo; GESTOR/MEMBRO ficam restritos ao próprio setor (abertura,
+fila e home). Sem `AUTH_SECRET`, a plataforma roda aberta (dev).
 
 ---
 
@@ -389,6 +396,9 @@ npm run dev                       # http://localhost:3000
 ```
 
 Produção: `npm run build && npm run start`. Requer **Node.js ≥ 20.9**.
+
+**Docker** (build standalone, para Hetzner/containers): `docker build -t tickets-faj .` e
+`docker run -p 3000:3000 --env-file .env.local tickets-faj`.
 
 Sem `DATABASE_URL`, a aplicação ainda **sobe**: `/dho/movimentacao` e o builder em
 `/admin/builder/demo` funcionam a partir do seed em memória (apenas leitura/visualização —
