@@ -1,0 +1,55 @@
+version: "3.8"
+
+# Tickets FAJ — Docker Swarm + Traefik (Hetzner 89.167.5.131)
+# Deploy:  docker stack deploy -c docker-compose.prod.yml tickets
+# O arquivo .env e este YAML devem estar em /root/tickets/ no servidor.
+# Pré-requisitos: rede externa `network_public` e DNS tickets.grupofaj.com.br -> 89.167.5.131.
+
+services:
+  tickets:
+    image: tickets-faj:latest
+    env_file:
+      - .env
+    networks:
+      - network_public
+    deploy:
+      replicas: 2
+      update_config:
+        parallelism: 1
+        delay: 10s
+        order: start-first
+        failure_action: rollback
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 768M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+      labels:
+        - "traefik.enable=true"
+        - "traefik.docker.network=network_public"
+        # Router principal
+        - "traefik.http.routers.tickets.rule=Host(`tickets.grupofaj.com.br`)"
+        - "traefik.http.routers.tickets.entrypoints=websecure"
+        - "traefik.http.routers.tickets.tls.certresolver=letsencryptresolver"
+        - "traefik.http.routers.tickets.priority=10"
+        # Service
+        - "traefik.http.services.tickets.loadbalancer.server.port=3000"
+        - "traefik.http.services.tickets.loadbalancer.healthcheck.path=/api/health"
+        - "traefik.http.services.tickets.loadbalancer.healthcheck.interval=30s"
+        # Security headers
+        - "traefik.http.middlewares.tickets-headers.headers.stsSeconds=31536000"
+        - "traefik.http.middlewares.tickets-headers.headers.stsIncludeSubdomains=true"
+        - "traefik.http.middlewares.tickets-headers.headers.stsPreload=true"
+        - "traefik.http.middlewares.tickets-headers.headers.contentTypeNosniff=true"
+        - "traefik.http.middlewares.tickets-headers.headers.browserXssFilter=true"
+        - "traefik.http.routers.tickets.middlewares=tickets-headers@docker"
+
+networks:
+  network_public:
+    external: true
