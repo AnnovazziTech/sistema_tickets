@@ -1,8 +1,13 @@
 import NextAuth, { type DefaultSession } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
-import MicrosoftEntraID from "next-auth/providers/microsoft-entra-id";
 import type { Provider } from "next-auth/providers";
-import { resolverPapel, type Papel } from "@/lib/auth/resolverPapel";
+import type { Papel } from "@/lib/auth/resolverPapel";
+import {
+  verificarTokenHub,
+  nivelParaPapel,
+  resolverSetor,
+  sincronizarUsuario,
+} from "@/lib/auth/hubSso";
 
 declare module "next-auth" {
   interface Session {
@@ -42,16 +47,34 @@ if (process.env.AUTH_DEV_LOGIN === "true") {
   );
 }
 
-// SSO Microsoft Entra ID (produção): habilitado quando as credenciais estão presentes.
-if (process.env.AUTH_MICROSOFT_ENTRA_ID_ID && process.env.AUTH_MICROSOFT_ENTRA_ID_SECRET) {
-  providers.push(
-    MicrosoftEntraID({
-      clientId: process.env.AUTH_MICROSOFT_ENTRA_ID_ID,
-      clientSecret: process.env.AUTH_MICROSOFT_ENTRA_ID_SECRET,
-      issuer: process.env.AUTH_MICROSOFT_ENTRA_ID_ISSUER,
-    }),
-  );
-}
+// SSO corporativo: acesso via Hub de Acesso FAJ. O hub autentica no Microsoft Entra ID e
+// redireciona para /api/auth/sso/callback com um JWT curto. Aqui o token é validado (JWKS do
+// hub) e trocado por sessão própria. O `nivel` do hub é a fonte de verdade do RBAC.
+providers.push(
+  Credentials({
+    id: "hub-sso",
+    name: "Hub de Acesso FAJ",
+    credentials: { token: { label: "Token SSO", type: "text" } },
+    authorize: async (cred) => {
+      const token = String(cred?.token ?? "");
+      if (!token) return null;
+      const claims = await verificarTokenHub(token);
+      if (!claims || claims.nivel === "bloqueado") return null;
+      const papel = nivelParaPapel(claims.nivel);
+      const { setorSlug, setorNome } = await resolverSetor(claims.setorId);
+      await sincronizarUsuario(claims, papel, setorNome);
+      return {
+        id: claims.sub,
+        email: claims.email,
+        name: claims.nome,
+        papel,
+        setorId: claims.setorId,
+        setorNome,
+        setorSlug,
+      };
+    },
+  }),
+);
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   trustHost: true,
@@ -59,19 +82,19 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   providers,
   pages: { signIn: "/login" },
   callbacks: {
-    async jwt({ token, user, account }) {
-      // Provider dev já entrega o papel/setor no `user`.
+    async jwt({ token, user }) {
+      // Ambos os providers (dev e hub-sso) já entregam papel/setor resolvidos no `user`.
       if (user && (user as { papel?: Papel }).papel) {
-        token.papel = (user as { papel?: Papel }).papel;
-        token.setorSlug = (user as { setorSlug?: string | null }).setorSlug ?? null;
-      }
-      // SSO corporativo: resolve papel/setor a partir do diretório.
-      if (account?.provider === "microsoft-entra-id" && token.email) {
-        const r = await resolverPapel(token.email);
-        token.papel = r.papel;
-        token.setorId = r.setorId;
-        token.setorNome = r.setorNome;
-        token.setorSlug = r.setorSlug;
+        const u = user as {
+          papel?: Papel;
+          setorId?: string | null;
+          setorNome?: string | null;
+          setorSlug?: string | null;
+        };
+        token.papel = u.papel;
+        token.setorId = u.setorId ?? null;
+        token.setorNome = u.setorNome ?? null;
+        token.setorSlug = u.setorSlug ?? null;
       }
       if (!token.papel) token.papel = "MEMBRO";
       return token;

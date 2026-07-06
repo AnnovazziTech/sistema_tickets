@@ -7,11 +7,11 @@ import { Campo } from "@/components/form-fields";
 
 export function LoginForm({
   devAtivo,
-  entraAtivo,
+  hubUrl,
   callbackUrl,
 }: {
   devAtivo: boolean;
-  entraAtivo: boolean;
+  hubUrl: string;
   callbackUrl: string;
 }) {
   const [email, setEmail] = useState("");
@@ -36,16 +36,17 @@ export function LoginForm({
 
   return (
     <div className="space-y-4">
-      {entraAtivo && (
-        <button
-          onClick={() => signIn("microsoft-entra-id", { callbackUrl })}
-          className="flex w-full items-center justify-center gap-2 rounded-[var(--radius-faj)] bg-faj-azul px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-faj-azul-medio"
-        >
-          <LogIn size={16} /> Entrar com Microsoft
-        </button>
-      )}
+      <a
+        href={hubUrl}
+        className="flex w-full items-center justify-center gap-2 rounded-[var(--radius-faj)] bg-faj-azul px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-faj-azul-medio"
+      >
+        <LogIn size={16} /> Entrar pelo Hub de Acesso FAJ
+      </a>
+      <p className="text-center text-xs text-faj-texto-dim">
+        O acesso é feito pelo hub corporativo (login Microsoft). Você será redirecionado de volta.
+      </p>
 
-      {entraAtivo && devAtivo && (
+      {devAtivo && (
         <div className="flex items-center gap-3 text-[11px] uppercase tracking-wide text-faj-texto-muted">
           <span className="h-px flex-1 bg-faj-border" /> ou (dev) <span className="h-px flex-1 bg-faj-border" />
         </div>
@@ -97,13 +98,6 @@ export function LoginForm({
             {carregando ? "Entrando..." : "Entrar (desenvolvimento)"}
           </button>
         </form>
-      )}
-
-      {!devAtivo && !entraAtivo && (
-        <p className="text-sm text-faj-texto-dim">
-          Nenhum provedor de login configurado. Defina <code>AUTH_DEV_LOGIN=true</code> (dev) ou as
-          credenciais do Microsoft Entra ID.
-        </p>
       )}
     </div>
   );
