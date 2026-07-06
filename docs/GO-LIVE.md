@@ -29,14 +29,16 @@ não subiu. Subir a stack registra o router e o Traefik emite o Let's Encrypt au
    git clone https://github.com/AnnovazziTech/sistema_tickets.git /root/tickets   # ou: cd /root/tickets && git pull
    cd /root/tickets
    ```
-3. Criar `/root/tickets/.env` (NÃO versionar; **sem** `AUTH_DEV_LOGIN`):
+3. Criar `/root/tickets/.env` (NÃO versionar; **sem** `AUTH_DEV_LOGIN`).
+   ⚠️ **SEM aspas nos valores** — `docker stack deploy` (Swarm) lê o `env_file` literal e as aspas
+   entram no valor, quebrando URL/DB/secret. Só use aspas se o valor tiver espaço (não é o caso aqui).
    ```env
-   DATABASE_URL="postgresql://USER:SENHA@89.167.5.131:32789/dwfaj"
-   AUTH_SECRET="<openssl rand -base64 32>"
-   HUB_SSO_JWKS_URL="https://sistemas.grupofaj.com.br/.well-known/jwks.json"
-   HUB_SSO_ISSUER="https://sistemas.grupofaj.com.br"
-   SSO_APP_SLUG="tickets"
-   # E-mail (opcional): SMTP_HOST/PORT/USER/PASS + MAIL_TO="dp@grupofaj.com.br, rh@grupofaj.com.br"
+   DATABASE_URL=postgresql://USER:SENHA@89.167.5.131:32789/dwfaj
+   AUTH_SECRET=COLE_AQUI_O_openssl_rand_base64_32
+   HUB_SSO_JWKS_URL=https://sistemas.grupofaj.com.br/.well-known/jwks.json
+   HUB_SSO_ISSUER=https://sistemas.grupofaj.com.br
+   SSO_APP_SLUG=tickets
+   # E-mail (opcional): SMTP_HOST/SMTP_PORT/SMTP_USER/SMTP_PASS + MAIL_TO=dp@grupofaj.com.br, rh@grupofaj.com.br
    ```
 4. Build + deploy:
    ```bash
