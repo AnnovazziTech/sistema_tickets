@@ -9,18 +9,27 @@ export const dynamic = "force-dynamic";
  * "hub-sso") e trocamos por sessão própria (cookie NextAuth). O token do hub dura só 5 min.
  *
  * URL registrada no hub: https://tickets.grupofaj.com.br/api/auth/sso/callback
+ *
+ * Redirect via Location RELATIVO (o navegador resolve contra o host real). Atrás do Traefik,
+ * `req.url` traz o host interno do container (0.0.0.0:3000) — usar URL absoluta a partir dele
+ * mandaria o usuário para um endereço morto.
  */
+function redir(path: string) {
+  return new NextResponse(null, { status: 307, headers: { Location: path } });
+}
+
 export async function GET(req: NextRequest) {
   const token = req.nextUrl.searchParams.get("token");
-  const destino = req.nextUrl.searchParams.get("callbackUrl") || "/";
-  if (!token) {
-    return NextResponse.redirect(new URL("/login?erro=sso-sem-token", req.url));
-  }
+  // Só aceita caminho relativo interno (evita open-redirect).
+  const cb = req.nextUrl.searchParams.get("callbackUrl");
+  const destino = cb && cb.startsWith("/") && !cb.startsWith("//") ? cb : "/";
+
+  if (!token) return redir("/login?erro=sso-sem-token");
   try {
-    // redirect:false → estabelece a sessão e retorna sem lançar o redirect interno.
+    // redirect:false → estabelece a sessão (cookie) e retorna sem lançar o redirect interno.
     await signIn("hub-sso", { token, redirect: false });
   } catch {
-    return NextResponse.redirect(new URL("/login?erro=sso-invalido", req.url));
+    return redir("/login?erro=sso-invalido");
   }
-  return NextResponse.redirect(new URL(destino, req.url));
+  return redir(destino);
 }
